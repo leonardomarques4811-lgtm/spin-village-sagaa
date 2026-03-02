@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SpinVillage Saga 🎰</title>
+<title>SpinVillage Saga - Coin Master Style</title>
 <style>
 body {
     background: linear-gradient(to bottom, #1a1a2e, #0b0c1a);
@@ -43,23 +43,32 @@ button:active {
     padding: 20px;
     margin: 20px auto;
     border-radius: 20px;
-    width: 320px;
+    width: 340px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     transition: transform 0.2s;
 }
 .card:hover { transform: translateY(-5px); }
+
 /* Roleta */
 #wheel-container { position: relative; width: 300px; height: 300px; margin: 20px auto; }
 #wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; border: 5px solid #e94560; box-shadow: 0 0 20px rgba(0,0,0,0.5);}
 .sector { position: absolute; width: 50%; height: 50%; top: 50%; left: 50%; transform-origin: 0% 0%; overflow: visible;}
 .sector img { width: 60px; position: absolute; top: -30px; left: -30px;}
 #pointer { position: absolute; top: -10px; left: 50%; width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 25px solid #e94560; transform: translateX(-50%); z-index:10;}
+
 /* Vila animada */
-#village { margin: 20px auto; width: 300px; height: 200px; position: relative;}
+#village { margin: 20px auto; width: 300px; height: 200px; position: relative; overflow: hidden; border-top:1px solid rgba(255,255,255,0.1);}
 .building { width: 60px; height: 60px; position: absolute; bottom: 0; transition: bottom 0.5s, opacity 0.5s;}
-/* Moedas/escudos caindo */
+.character { position: absolute; bottom: 0; width: 40px; animation: walk 3s linear infinite; }
+@keyframes walk { 0%{left:-50px;} 100%{left:260px;} }
+
+/* Moedas e escudos caindo */
 .flying { position: absolute; width: 30px; height: 30px; animation: fall 1s ease-out forwards; z-index:100; }
 @keyframes fall { 0% {opacity:1; transform: translateY(0px);} 100% {opacity:0; transform: translateY(200px);} }
+
+/* Ataque animado */
+.attack-effect { position:absolute; width:80px; height:80px; background:radial-gradient(circle, #ff0000 0%, transparent 70%); border-radius:50%; animation: explode 0.6s forwards; z-index:200; }
+@keyframes explode { 0%{transform:scale(0);opacity:1;} 100%{transform:scale(1.5);opacity:0;} }
 </style>
 </head>
 <body>
@@ -107,6 +116,7 @@ const rewards = [
 
 const wheel = document.getElementById("wheel");
 
+// Cria roleta
 function createWheel(){
     rewards.forEach((reward,i)=>{
         const div = document.createElement("div");
@@ -120,10 +130,12 @@ function createWheel(){
 }
 createWheel();
 
+// Vila animada
 function updateVillage(){
     const villageDiv = document.getElementById("village");
     villageDiv.innerHTML="";
     const village=villages[villageIndex];
+    // Construções
     for(let i=0;i<village.built;i++){
         const img=document.createElement("img");
         img.src=village.image[i];
@@ -133,6 +145,11 @@ function updateVillage(){
         villageDiv.appendChild(img);
         setTimeout(()=>{img.style.opacity=1; img.style.bottom="0px";},100);
     }
+    // Personagem andando
+    const character=document.createElement("img");
+    character.src="https://i.imgur.com/4AiXzf8.png"; // personagem genérico
+    character.className="character";
+    villageDiv.appendChild(character);
 }
 
 function updateUI(){
@@ -144,6 +161,7 @@ function updateUI(){
     updateVillage();
 }
 
+// Moedas/escudos voando
 function flyEffect(type,value){
     const container=document.body;
     for(let i=0;i<value;i++){
@@ -157,6 +175,18 @@ function flyEffect(type,value){
     }
 }
 
+// Ataque animado
+function attackEffect(){
+    const container=document.getElementById("village");
+    const atk=document.createElement("div");
+    atk.className="attack-effect";
+    atk.style.left="100px";
+    atk.style.bottom="50px";
+    container.appendChild(atk);
+    setTimeout(()=>atk.remove(),600);
+}
+
+// Girar roleta
 function spinWheel(){
     if(spins<=0){ alert("Sem spins!"); return;}
     spins--;
@@ -172,13 +202,15 @@ function spinWheel(){
         const reward=rewards[randomIndex];
         if(reward.type==="coins") { coins+=reward.value; flyEffect("coins",reward.value/50);}
         else if(reward.type==="shield") { shields+=reward.value; flyEffect("shield",reward.value);}
-        else if(reward.type==="attack") { coins+=reward.value; flyEffect("coins",reward.value/50);}
+        else if(reward.type==="attack") { coins+=reward.value; attackEffect();}
+
         alert(`🎉 Você ganhou: ${reward.type==="coins"?reward.value+" moedas":reward.type==="shield"?reward.value+" escudo(s)":"Ataque! +" + reward.value}`);
         saveGame();
         updateUI();
     },4000);
 }
 
+// Construir vila
 function build(){
     const village=villages[villageIndex];
     if(village.built>=3){ alert("Vila completa!"); return;}
@@ -195,6 +227,7 @@ function build(){
     } else { alert("Moedas insuficientes!");}
 }
 
+// Salvar e carregar
 function saveGame(){
     localStorage.setItem("spinVillageSave",JSON.stringify({coins,spins,shields,villageIndex,villages}));
 }
