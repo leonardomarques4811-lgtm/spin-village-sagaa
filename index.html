@@ -19,7 +19,6 @@ h1 {
     font-size: 3em;
 }
 
-/* Botões */
 button {
     padding: 15px 30px;
     font-size: 20px;
@@ -41,7 +40,6 @@ button:active {
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
 }
 
-/* Cartões */
 .card {
     background: linear-gradient(to bottom, #16213e, #0f3460);
     padding: 20px;
@@ -53,7 +51,7 @@ button:active {
 }
 .card:hover { transform: translateY(-5px); }
 
-/* Roleta */
+/* Roleta com imagens */
 #wheel-container {
     position: relative;
     width: 300px;
@@ -64,30 +62,30 @@ button:active {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 10px solid #e94560;
-    background: conic-gradient(
-        gold 0deg 90deg,
-        red 90deg 180deg,
-        #1abc9c 180deg 270deg,
-        #f39c12 270deg 360deg
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1);
+    position: relative;
+    overflow: hidden;
+    border: 5px solid #e94560;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
-#wheel:after {
-    content: '';
+
+.sector {
     position: absolute;
+    width: 50%;
+    height: 50%;
     top: 50%;
     left: 50%;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
+    transform-origin: 0% 0%;
+    overflow: visible;
 }
+
+.sector img {
+    width: 60px;
+    position: absolute;
+    top: -30px;
+    left: -30px;
+}
+
+/* Ponteiro */
 #pointer {
     position: absolute;
     top: -10px;
@@ -144,39 +142,52 @@ function updateUI(){
     document.getElementById("buildings").innerText = villages[villageIndex].built;
 }
 
+/* Criar roleta com imagens */
+const wheel = document.getElementById("wheel");
+const rewards = [
+    { type: "coins", img: "https://i.imgur.com/1KegWPz.png", value: 100 }, // moeda
+    { type: "attack", img: "https://i.imgur.com/2M0x1hL.png", value: 200 }, // ataque
+    { type: "shield", img: "https://i.imgur.com/6dX0A5b.png", value: 1 },   // escudo
+    { type: "coins", img: "https://i.imgur.com/1KegWPz.png", value: 50 }   // pequena moeda
+];
+
+function createWheel(){
+    const sectors = rewards.length;
+    for(let i=0; i<sectors; i++){
+        const div = document.createElement("div");
+        div.className = "sector";
+        div.style.transform = `rotate(${i*360/sectors}deg) skewY(-60deg)`;
+        const img = document.createElement("img");
+        img.src = rewards[i].img;
+        div.appendChild(img);
+        wheel.appendChild(div);
+    }
+}
+createWheel();
+
 function spinWheel(){
-    if(spins <= 0){
+    if(spins <=0){
         alert("Sem spins!");
         return;
     }
     spins--;
 
-    const wheel = document.getElementById("wheel");
-    const segments = 4; // 4 prêmios
-    const randomSegment = Math.floor(Math.random()*segments);
-    const segmentAngle = 360/segments;
-    const extraSpins = 5; // gira várias vezes
-    const totalDegrees = extraSpins*360 + randomSegment*segmentAngle + segmentAngle/2;
+    const sectors = rewards.length;
+    const randomIndex = Math.floor(Math.random()*sectors);
+    const spinsCount = 5;
+    const angle = 360/spins.length;
+    const rotation = spinsCount*360 + randomIndex*(360/sectors) + (360/sectors)/2;
 
     wheel.style.transition = "transform 4s cubic-bezier(0.33, 1, 0.68, 1)";
-    wheel.style.transform = `rotate(${totalDegrees}deg)`;
+    wheel.style.transform = `rotate(${rotation}deg)`;
 
-    setTimeout(() => {
-        let reward;
-        if(randomSegment === 0){
-            coins += 100;
-            reward = "Você ganhou 100 moedas!";
-        } else if(randomSegment === 1){
-            coins += 200;
-            reward = "Ataque bem-sucedido! +200 moedas!";
-        } else if(randomSegment === 2){
-            shields++;
-            reward = "Você ganhou 1 escudo!";
-        } else {
-            coins += 50;
-            reward = "Pequena recompensa! +50 moedas!";
-        }
-        alert(reward);
+    setTimeout(()=>{
+        const reward = rewards[randomIndex];
+        if(reward.type === "coins") coins += reward.value;
+        else if(reward.type === "attack") coins += reward.value;
+        else if(reward.type === "shield") shields += reward.value;
+
+        alert(`🎉 Você ganhou: ${reward.type==="coins"?reward.value+" moedas":reward.type==="shield"?reward.value+" escudo(s)":"Ataque! +" + reward.value}`);
         saveGame();
         updateUI();
     }, 4000);
@@ -229,6 +240,5 @@ function loadGame(){
 loadGame();
 updateUI();
 </script>
-
 </body>
 </html>
