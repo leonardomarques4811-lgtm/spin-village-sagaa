@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SpinVillage Saga</title>
+<style>
+body {
+    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    color: white;
+    font-family: Arial;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+h1 { color: gold; }
+button {
+    padding: 15px 25px;
+    font-size: 18px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    background-color: #e94560;
+    color: white;
+}
+button:active { transform: scale(0.95); }
+.card {
+    background: #0f3460;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>🏰 SpinVillage Saga 🎰</h1>
+
+<div class="card">
+    <p>💰 Moedas: <span id="coins">200</span></p>
+    <p>🎰 Spins: <span id="spins">20</span></p>
+    <p>🛡️ Escudos: <span id="shields">0</span></p>
+</div>
+
+<button onclick="spin()">GIRAR 🎰</button>
+
+<div class="card">
+    <h2 id="villageName">🌲 Vila da Floresta</h2>
+    <p>Construções: <span id="buildings">0</span>/3</p>
+    <button onclick="build()">Construir 🏗️</button>
+</div>
+
+<script>
+let coins = 200;
+let spins = 20;
+let shields = 0;
+let villageIndex = 0;
+
+const villages = [
+    { name: "🌲 Vila da Floresta", costs: [200,300,400], built: 0 },
+    { name: "🏜️ Vila do Deserto", costs: [400,500,600], built: 0 },
+    { name: "❄️ Vila Congelada", costs: [600,800,1000], built: 0 }
+];
+
+function updateUI(){
+    document.getElementById("coins").innerText = coins;
+    document.getElementById("spins").innerText = spins;
+    document.getElementById("shields").innerText = shields;
+    document.getElementById("villageName").innerText = villages[villageIndex].name;
+    document.getElementById("buildings").innerText = villages[villageIndex].built;
+}
+
+function spin(){
+    if(spins <= 0){
+        alert("Sem spins!");
+        return;
+    }
+    spins--;
+    let reward = Math.floor(Math.random()*4);
+
+    if(reward === 0){
+        coins += 100;
+        alert("Você ganhou 100 moedas!");
+    } else if(reward === 1){
+        coins += 200;
+        alert("Ataque bem-sucedido! +200 moedas!");
+    } else if(reward === 2){
+        shields++;
+        alert("Você ganhou 1 escudo!");
+    } else {
+        coins += 50;
+        alert("Pequena recompensa! +50 moedas!");
+    }
+
+    saveGame();
+    updateUI();
+}
+
+function build(){
+    let village = villages[villageIndex];
+
+    if(village.built >= 3){
+        alert("Vila completa!");
+        return;
+    }
+
+    let cost = village.costs[village.built];
+
+    if(coins >= cost){
+        coins -= cost;
+        village.built++;
+
+        if(village.built === 3 && villageIndex < villages.length-1){
+            villageIndex++;
+            alert("Nova vila desbloqueada!");
+        }
+
+        saveGame();
+        updateUI();
+    } else {
+        alert("Moedas insuficientes!");
+    }
+}
+
+function saveGame(){
+    localStorage.setItem("spinVillageSave", JSON.stringify({
+        coins, spins, shields, villageIndex, villages
+    }));
+}
+
+function loadGame(){
+    let data = localStorage.getItem("spinVillageSave");
+    if(data){
+        let save = JSON.parse(data);
+        coins = save.coins;
+        spins = save.spins;
+        shields = save.shields;
+        villageIndex = save.villageIndex;
+        Object.assign(villages, save.villages);
+    }
+}
+
+loadGame();
+updateUI();
+</script>
+
+</body>
+</html>
