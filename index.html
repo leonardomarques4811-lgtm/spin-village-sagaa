@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <title>SpinVillage Saga 🎰</title>
@@ -45,13 +45,13 @@ button:active {
     padding: 20px;
     margin: 20px auto;
     border-radius: 20px;
-    width: 300px;
+    width: 320px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     transition: transform 0.2s;
 }
 .card:hover { transform: translateY(-5px); }
 
-/* Roleta com imagens */
+/* Roleta */
 #wheel-container {
     position: relative;
     width: 300px;
@@ -67,7 +67,6 @@ button:active {
     border: 5px solid #e94560;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
-
 .sector {
     position: absolute;
     width: 50%;
@@ -77,7 +76,6 @@ button:active {
     transform-origin: 0% 0%;
     overflow: visible;
 }
-
 .sector img {
     width: 60px;
     position: absolute;
@@ -96,6 +94,21 @@ button:active {
     border-right: 15px solid transparent;
     border-bottom: 25px solid #e94560;
     transform: translateX(-50%);
+}
+
+/* Vila animada */
+#village {
+    margin: 20px auto;
+    width: 300px;
+    height: 200px;
+    position: relative;
+}
+.building {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    bottom: 0;
+    transition: bottom 0.5s, opacity 0.5s;
 }
 </style>
 </head>
@@ -116,8 +129,9 @@ button:active {
 
 <button onclick="spinWheel()">GIRAR ROLETA 🎰</button>
 
-<div class="card">
+<div class="card" id="village-card">
     <h2 id="villageName">🌲 Vila da Floresta</h2>
+    <div id="village"></div>
     <p>Construções: <span id="buildings">0</span>/3</p>
     <button onclick="build()">Construir 🏗️</button>
 </div>
@@ -129,10 +143,49 @@ let shields = 0;
 let villageIndex = 0;
 
 const villages = [
-    { name: "🌲 Vila da Floresta", costs: [200,300,400], built: 0 },
-    { name: "🏜️ Vila do Deserto", costs: [400,500,600], built: 0 },
-    { name: "❄️ Vila Congelada", costs: [600,800,1000], built: 0 }
+    { name: "🌲 Vila da Floresta", costs: [200,300,400], built: 0, image: ["https://i.imgur.com/8P5Kf2G.png","https://i.imgur.com/3PTfI6g.png","https://i.imgur.com/YWdNmfV.png"] },
+    { name: "🏜️ Vila do Deserto", costs: [400,500,600], built: 0, image: ["https://i.imgur.com/6XWTiE5.png","https://i.imgur.com/ocfZ3Cn.png","https://i.imgur.com/Y8j5iMK.png"] },
+    { name: "❄️ Vila Congelada", costs: [600,800,1000], built: 0, image: ["https://i.imgur.com/g7ZhCqJ.png","https://i.imgur.com/IXoq2hZ.png","https://i.imgur.com/k6skzL2.png"] }
 ];
+
+// Prêmios da roleta
+const rewards = [
+    { type: "coins", img: "https://i.imgur.com/1KegWPz.png", value: 100 },
+    { type: "attack", img: "https://i.imgur.com/2M0x1hL.png", value: 200 },
+    { type: "shield", img: "https://i.imgur.com/6dX0A5b.png", value: 1 },
+    { type: "coins", img: "https://i.imgur.com/1KegWPz.png", value: 50 }
+];
+
+// Criar roleta visual
+const wheel = document.getElementById("wheel");
+function createWheel(){
+    rewards.forEach((reward,i)=>{
+        const div = document.createElement("div");
+        div.className = "sector";
+        div.style.transform = `rotate(${i*360/rewards.length}deg) skewY(-60deg)`;
+        const img = document.createElement("img");
+        img.src = reward.img;
+        div.appendChild(img);
+        wheel.appendChild(div);
+    });
+}
+createWheel();
+
+// Criar vila visual
+function updateVillage(){
+    const villageDiv = document.getElementById("village");
+    villageDiv.innerHTML = "";
+    const village = villages[villageIndex];
+    for(let i=0;i<village.built;i++){
+        const img = document.createElement("img");
+        img.src = village.image[i];
+        img.className = "building";
+        img.style.left = `${i*70}px`;
+        img.style.opacity = 0;
+        villageDiv.appendChild(img);
+        setTimeout(()=>{img.style.opacity=1; img.style.bottom="0px";},100);
+    }
+}
 
 function updateUI(){
     document.getElementById("coins").innerText = coins;
@@ -140,42 +193,17 @@ function updateUI(){
     document.getElementById("shields").innerText = shields;
     document.getElementById("villageName").innerText = villages[villageIndex].name;
     document.getElementById("buildings").innerText = villages[villageIndex].built;
+    updateVillage();
 }
 
-/* Criar roleta com imagens */
-const wheel = document.getElementById("wheel");
-const rewards = [
-    { type: "coins", img: "https://i.imgur.com/1KegWPz.png", value: 100 }, // moeda
-    { type: "attack", img: "https://i.imgur.com/2M0x1hL.png", value: 200 }, // ataque
-    { type: "shield", img: "https://i.imgur.com/6dX0A5b.png", value: 1 },   // escudo
-    { type: "coins", img: "https://i.imgur.com/1KegWPz.png", value: 50 }   // pequena moeda
-];
-
-function createWheel(){
-    const sectors = rewards.length;
-    for(let i=0; i<sectors; i++){
-        const div = document.createElement("div");
-        div.className = "sector";
-        div.style.transform = `rotate(${i*360/sectors}deg) skewY(-60deg)`;
-        const img = document.createElement("img");
-        img.src = rewards[i].img;
-        div.appendChild(img);
-        wheel.appendChild(div);
-    }
-}
-createWheel();
-
+// Girar roleta
 function spinWheel(){
-    if(spins <=0){
-        alert("Sem spins!");
-        return;
-    }
+    if(spins <=0){ alert("Sem spins!"); return;}
     spins--;
 
     const sectors = rewards.length;
     const randomIndex = Math.floor(Math.random()*sectors);
-    const spinsCount = 5;
-    const angle = 360/spins.length;
+    const spinsCount = 5; // giros completos
     const rotation = spinsCount*360 + randomIndex*(360/sectors) + (360/sectors)/2;
 
     wheel.style.transition = "transform 4s cubic-bezier(0.33, 1, 0.68, 1)";
@@ -183,52 +211,41 @@ function spinWheel(){
 
     setTimeout(()=>{
         const reward = rewards[randomIndex];
-        if(reward.type === "coins") coins += reward.value;
-        else if(reward.type === "attack") coins += reward.value;
-        else if(reward.type === "shield") shields += reward.value;
+        if(reward.type==="coins") coins += reward.value;
+        else if(reward.type==="attack") coins += reward.value;
+        else if(reward.type==="shield") shields += reward.value;
 
         alert(`🎉 Você ganhou: ${reward.type==="coins"?reward.value+" moedas":reward.type==="shield"?reward.value+" escudo(s)":"Ataque! +" + reward.value}`);
         saveGame();
         updateUI();
-    }, 4000);
+    },4000);
 }
 
+// Construir vila
 function build(){
-    let village = villages[villageIndex];
-
-    if(village.built >= 3){
-        alert("Vila completa!");
-        return;
-    }
-
-    let cost = village.costs[village.built];
-
+    const village = villages[villageIndex];
+    if(village.built >=3){ alert("Vila completa!"); return;}
+    const cost = village.costs[village.built];
     if(coins >= cost){
         coins -= cost;
         village.built++;
-
         if(village.built === 3 && villageIndex < villages.length-1){
             villageIndex++;
             alert("Nova vila desbloqueada!");
         }
-
         saveGame();
         updateUI();
-    } else {
-        alert("Moedas insuficientes!");
-    }
+    } else { alert("Moedas insuficientes!");}
 }
 
+// Salvar/carregar
 function saveGame(){
-    localStorage.setItem("spinVillageSave", JSON.stringify({
-        coins, spins, shields, villageIndex, villages
-    }));
+    localStorage.setItem("spinVillageSave", JSON.stringify({coins,spins,shields,villageIndex,villages}));
 }
-
 function loadGame(){
-    let data = localStorage.getItem("spinVillageSave");
+    const data = localStorage.getItem("spinVillageSave");
     if(data){
-        let save = JSON.parse(data);
+        const save = JSON.parse(data);
         coins = save.coins;
         spins = save.spins;
         shields = save.shields;
@@ -236,7 +253,6 @@ function loadGame(){
         Object.assign(villages, save.villages);
     }
 }
-
 loadGame();
 updateUI();
 </script>
