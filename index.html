@@ -5,29 +5,71 @@
 <title>SpinVillage Saga</title>
 <style>
 body {
-    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    background: linear-gradient(to bottom, #1a1a2e, #0b0c1a);
     color: white;
-    font-family: Arial;
+    font-family: 'Comic Sans MS', Arial, sans-serif;
     text-align: center;
     margin: 0;
     padding: 20px;
 }
-h1 { color: gold; }
+
+h1 { 
+    color: gold; 
+    text-shadow: 2px 2px 5px #ff0000;
+    font-size: 3em;
+}
+
 button {
-    padding: 15px 25px;
-    font-size: 18px;
+    padding: 15px 30px;
+    font-size: 20px;
     margin: 10px;
     border: none;
-    border-radius: 10px;
-    background-color: #e94560;
+    border-radius: 15px;
+    background: linear-gradient(45deg, #ff5f6d, #ffc371);
     color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transition: transform 0.1s, box-shadow 0.2s;
 }
-button:active { transform: scale(0.95); }
+
+button:hover {
+    box-shadow: 0 10px 20px rgba(255,255,255,0.4);
+    transform: scale(1.05);
+}
+
+button:active { 
+    transform: scale(0.95); 
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
 .card {
-    background: #0f3460;
-    padding: 15px;
-    margin: 10px;
-    border-radius: 10px;
+    background: linear-gradient(to bottom, #16213e, #0f3460);
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 20px;
+    width: 300px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+#spinner {
+    margin: 30px auto;
+    width: 100px;
+    height: 100px;
+    border: 10px solid #e94560;
+    border-top: 10px solid gold;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
 }
 </style>
 </head>
@@ -41,6 +83,7 @@ button:active { transform: scale(0.95); }
     <p>🛡️ Escudos: <span id="shields">0</span></p>
 </div>
 
+<div id="spinner"></div>
 <button onclick="spin()">GIRAR 🎰</button>
 
 <div class="card">
@@ -75,24 +118,31 @@ function spin(){
         return;
     }
     spins--;
-    let reward = Math.floor(Math.random()*4);
+    const spinner = document.getElementById("spinner");
+    spinner.style.display = "block";
+    spinner.style.animation = "spin 1s ease-in-out";
 
-    if(reward === 0){
-        coins += 100;
-        alert("Você ganhou 100 moedas!");
-    } else if(reward === 1){
-        coins += 200;
-        alert("Ataque bem-sucedido! +200 moedas!");
-    } else if(reward === 2){
-        shields++;
-        alert("Você ganhou 1 escudo!");
-    } else {
-        coins += 50;
-        alert("Pequena recompensa! +50 moedas!");
-    }
+    setTimeout(() => {
+        spinner.style.display = "none";
 
-    saveGame();
-    updateUI();
+        let reward = Math.floor(Math.random()*4);
+        if(reward === 0){
+            coins += 100;
+            alert("Você ganhou 100 moedas!");
+        } else if(reward === 1){
+            coins += 200;
+            alert("Ataque bem-sucedido! +200 moedas!");
+        } else if(reward === 2){
+            shields++;
+            alert("Você ganhou 1 escudo!");
+        } else {
+            coins += 50;
+            alert("Pequena recompensa! +50 moedas!");
+        }
+
+        saveGame();
+        updateUI();
+    }, 1000);
 }
 
 function build(){
