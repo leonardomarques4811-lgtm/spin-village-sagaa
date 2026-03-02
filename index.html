@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>SpinVillage Saga</title>
+<title>SpinVillage Saga 🎰</title>
 <style>
 body {
     background: linear-gradient(to bottom, #1a1a2e, #0b0c1a);
@@ -19,6 +19,7 @@ h1 {
     font-size: 3em;
 }
 
+/* Botões */
 button {
     padding: 15px 30px;
     font-size: 20px;
@@ -31,17 +32,16 @@ button {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     transition: transform 0.1s, box-shadow 0.2s;
 }
-
 button:hover {
     box-shadow: 0 10px 20px rgba(255,255,255,0.4);
     transform: scale(1.05);
 }
-
 button:active { 
     transform: scale(0.95); 
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
 }
 
+/* Cartões */
 .card {
     background: linear-gradient(to bottom, #16213e, #0f3460);
     padding: 20px;
@@ -51,25 +51,53 @@ button:active {
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     transition: transform 0.2s;
 }
+.card:hover { transform: translateY(-5px); }
 
-.card:hover {
-    transform: translateY(-5px);
+/* Roleta */
+#wheel-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 20px auto;
 }
-
-#spinner {
-    margin: 30px auto;
-    width: 100px;
-    height: 100px;
-    border: 10px solid #e94560;
-    border-top: 10px solid gold;
+#wheel {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    animation: spin 1s ease-in-out;
-    display: none;
+    border: 10px solid #e94560;
+    background: conic-gradient(
+        gold 0deg 90deg,
+        red 90deg 180deg,
+        #1abc9c 180deg 270deg,
+        #f39c12 270deg 360deg
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1);
 }
-
-@keyframes spin {
-    0% { transform: rotate(0deg);}
-    100% { transform: rotate(360deg);}
+#wheel:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+#pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 25px solid #e94560;
+    transform: translateX(-50%);
 }
 </style>
 </head>
@@ -83,8 +111,12 @@ button:active {
     <p>🛡️ Escudos: <span id="shields">0</span></p>
 </div>
 
-<div id="spinner"></div>
-<button onclick="spin()">GIRAR 🎰</button>
+<div id="wheel-container">
+    <div id="pointer"></div>
+    <div id="wheel"></div>
+</div>
+
+<button onclick="spinWheel()">GIRAR ROLETA 🎰</button>
 
 <div class="card">
     <h2 id="villageName">🌲 Vila da Floresta</h2>
@@ -112,37 +144,42 @@ function updateUI(){
     document.getElementById("buildings").innerText = villages[villageIndex].built;
 }
 
-function spin(){
+function spinWheel(){
     if(spins <= 0){
         alert("Sem spins!");
         return;
     }
     spins--;
-    const spinner = document.getElementById("spinner");
-    spinner.style.display = "block";
-    spinner.style.animation = "spin 1s ease-in-out";
+
+    const wheel = document.getElementById("wheel");
+    const segments = 4; // 4 prêmios
+    const randomSegment = Math.floor(Math.random()*segments);
+    const segmentAngle = 360/segments;
+    const extraSpins = 5; // gira várias vezes
+    const totalDegrees = extraSpins*360 + randomSegment*segmentAngle + segmentAngle/2;
+
+    wheel.style.transition = "transform 4s cubic-bezier(0.33, 1, 0.68, 1)";
+    wheel.style.transform = `rotate(${totalDegrees}deg)`;
 
     setTimeout(() => {
-        spinner.style.display = "none";
-
-        let reward = Math.floor(Math.random()*4);
-        if(reward === 0){
+        let reward;
+        if(randomSegment === 0){
             coins += 100;
-            alert("Você ganhou 100 moedas!");
-        } else if(reward === 1){
+            reward = "Você ganhou 100 moedas!";
+        } else if(randomSegment === 1){
             coins += 200;
-            alert("Ataque bem-sucedido! +200 moedas!");
-        } else if(reward === 2){
+            reward = "Ataque bem-sucedido! +200 moedas!";
+        } else if(randomSegment === 2){
             shields++;
-            alert("Você ganhou 1 escudo!");
+            reward = "Você ganhou 1 escudo!";
         } else {
             coins += 50;
-            alert("Pequena recompensa! +50 moedas!");
+            reward = "Pequena recompensa! +50 moedas!";
         }
-
+        alert(reward);
         saveGame();
         updateUI();
-    }, 1000);
+    }, 4000);
 }
 
 function build(){
